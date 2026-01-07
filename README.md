@@ -98,7 +98,15 @@ When first using the tools, call `authenticate` to complete the OAuth flow.
 
 ## Usage with Claude Code
 
-The Gmail skill (`~/.claude/skills/gmail/`) teaches Claude Code how to:
+The Gmail skill teaches Claude Code how to manage email intelligently.
+
+### Install Skill (one-time)
+```bash
+# Copy skill files to your global Claude skills directory
+cp -r skills/gmail ~/.claude/skills/
+```
+
+The skill (`~/.claude/skills/gmail/`) teaches Claude Code how to:
 
 ### Triage Inbox
 ```
