@@ -60,6 +60,30 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 On first use, call `authenticate`. This opens a browser for Google OAuth.
 After authenticating, the token is saved at `~/.email-assistant/token.json`.
 
+### Troubleshooting Authentication Errors
+
+If you get authentication errors when calling Gmail tools:
+
+**Error: "Not authenticated" or "credentials not found"**
+1. Check if `~/.email-assistant/credentials.json` exists
+2. If missing, tell user:
+   > "Gmail API credentials are missing. Please download your OAuth credentials from Google Cloud Console and save them to `~/.email-assistant/credentials.json`"
+3. Once saved, call `authenticate` to complete OAuth flow
+
+**Error: "Token expired" or "invalid_grant"**
+1. Delete the old token: `rm ~/.email-assistant/token.json`
+2. Call `authenticate` again to get a fresh token
+
+**Error: "credentials.json not found"**
+Tell user to create credentials:
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Select/create project → Enable Gmail API
+3. Credentials → Create OAuth 2.0 Client ID (Desktop app)
+4. Download JSON → Save as `~/.email-assistant/credentials.json`
+
+**After fixing auth issues:**
+Run `authenticate` and then retry the original email operation.
+
 ## Important: Use Subagents for Email Processing
 
 Email content is large. To keep the main conversation context clean, always spawn a subagent for operations that read multiple emails.
