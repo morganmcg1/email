@@ -2,11 +2,22 @@
 
 ## Overview
 
-Triage scores emails as HIGH, MEDIUM, or LOW priority based on user-defined criteria.
+Triage scores emails as HIGH, MEDIUM, or LOW priority based on user-defined criteria stored in `~/.claude/skills/gmail/prioritization.json`.
 
 ## Step 1: Check for Existing Criteria
 
-Call `get_prioritization_criteria` to see if the user has set up their preferences.
+Read `~/.claude/skills/gmail/prioritization.json` to see if the user has set up their preferences.
+
+```python
+import json
+from pathlib import Path
+
+criteria_path = Path.home() / ".claude/skills/gmail/prioritization.json"
+if criteria_path.exists():
+    criteria = json.loads(criteria_path.read_text())
+else:
+    criteria = None
+```
 
 **If criteria exist:** Proceed to Step 3.
 **If no criteria:** Proceed to Step 2.
@@ -39,29 +50,37 @@ Ask the user these questions to build their priority profile:
 
 ### Save Criteria
 
-After gathering responses, call:
-```
-setup_prioritization(
-  vip_senders=["boss@company.com", "client@important.com"],
-  vip_domains=["company.com", "partner.org"],
-  high_priority_keywords=["urgent", "ASAP", "deadline", "action required"],
-  low_priority_types=["newsletter", "promotional", "marketing", "social"],
-  custom_rules=["Project X emails are high priority"]
-)
+After gathering responses, save to JSON:
+
+```python
+import json
+from pathlib import Path
+
+criteria = {
+    "vip_senders": ["boss@company.com", "client@important.com"],
+    "vip_domains": ["company.com", "partner.org"],
+    "high_priority_keywords": ["urgent", "ASAP", "deadline", "action required"],
+    "low_priority_types": ["newsletter", "promotional", "marketing", "social"],
+    "custom_rules": ["Project X emails are high priority"]
+}
+
+criteria_path = Path.home() / ".claude/skills/gmail/prioritization.json"
+criteria_path.write_text(json.dumps(criteria, indent=2))
 ```
 
-## Step 3: Triage Emails via Subagent
+## Step 3: Triage Emails via Claude Code Subagent
 
 **Important:** Use a subagent to avoid bloating main context with email content.
 
-### Subagent Prompt Template
+### Claude Code Subagent Prompt Template
 
 ```
 Use Gmail MCP tools to triage the inbox.
 
-1. First, call get_prioritization_criteria to get the user's criteria
-2. Then call get_emails with unread_only=true, max_results=20
-3. Score each email as HIGH, MEDIUM, or LOW based on:
+1. Filtering: If the user hasn't specified a time-frame, ask them over what timeframe you should filter unread emails by
+2. Read prioritization criteria from ~/.claude/skills/gmail/prioritization.json
+3. Call get_emails with unread_only=true, max_results=20
+4. Score each email as HIGH, MEDIUM, or LOW based on:
 
    HIGH if:
    - Sender is in VIP list: {vip_senders}
@@ -74,11 +93,11 @@ Use Gmail MCP tools to triage the inbox.
 
    MEDIUM: Everything else
 
-4. For each email, also determine if it NEEDS REPLY:
+5. For each email, also determine if it NEEDS REPLY:
    - NEEDS REPLY if: contains question, requests action, awaits user input
    - NO REPLY if: informational, CC'd only, automated/transactional
 
-5. Return a prioritized list with ONLY:
+6. Return a prioritized list with ONLY:
    - Priority level (HIGH/MEDIUM/LOW)
    - [REPLY NEEDED] flag if applicable
    - Sender name
@@ -143,6 +162,6 @@ User can ask to re-triage at any time. Always use fresh email data.
 ## Updating Criteria
 
 If user says things like "Actually, emails from X should be high priority", update their criteria:
-1. Get current criteria
+1. Read current criteria from `~/.claude/skills/gmail/prioritization.json`
 2. Add the new rule
-3. Save updated criteria
+3. Save updated criteria back to the file
