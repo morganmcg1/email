@@ -50,18 +50,19 @@ setup_prioritization(
 )
 ```
 
-## Step 3: Triage Emails via Subagent
+## Step 3: Triage Emails via Claude Code Subagent
 
 **Important:** Use a subagent to avoid bloating main context with email content.
 
-### Subagent Prompt Template
+### Claude Code Subagent Prompt Template
 
 ```
 Use Gmail MCP tools to triage the inbox.
 
-1. First, call get_prioritization_criteria to get the user's criteria
-2. Then call get_emails with unread_only=true, max_results=20
-3. Score each email as HIGH, MEDIUM, or LOW based on:
+1. Filtering: If the user hasn't specified a time-frame, ask them over what timeframe you should filter unread emails by
+2. First, call get_prioritization_criteria to get the user's criteria
+3. Then call get_emails with unread_only=true, max_results=200
+4. Score each email as HIGH, MEDIUM, or LOW based on:
 
    HIGH if:
    - Sender is in VIP list: {vip_senders}
@@ -74,11 +75,11 @@ Use Gmail MCP tools to triage the inbox.
 
    MEDIUM: Everything else
 
-4. For each email, also determine if it NEEDS REPLY:
+5. For each email, also determine if it NEEDS REPLY:
    - NEEDS REPLY if: contains question, requests action, awaits user input
    - NO REPLY if: informational, CC'd only, automated/transactional
 
-5. Return a prioritized list with ONLY:
+6. Return a prioritized list with ONLY:
    - Priority level (HIGH/MEDIUM/LOW)
    - [REPLY NEEDED] flag if applicable
    - Sender name

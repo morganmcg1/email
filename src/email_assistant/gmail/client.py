@@ -47,7 +47,7 @@ class GmailClient:
     def get_emails(
         self,
         query: str = "",
-        max_results: int = 50,
+        max_results: int = 200,
         unread_only: bool = False,
         label_ids: Optional[list[str]] = None,
     ) -> list[Email]:
@@ -85,7 +85,7 @@ class GmailClient:
         except Exception:
             return None
 
-    def search_emails(self, query: str, max_results: int = 50) -> list[Email]:
+    def search_emails(self, query: str, max_results: int = 200) -> list[Email]:
         """Search emails using Gmail query syntax."""
         return self.get_emails(query=query, max_results=max_results)
 

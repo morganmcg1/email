@@ -84,14 +84,14 @@ Tell user to create credentials:
 **After fixing auth issues:**
 Run `authenticate` and then retry the original email operation.
 
-## Important: Use Subagents for Email Processing
+## Important: ALWAYS Use Claude Code subagents for Email Processing
 
-Email content is large. To keep the main conversation context clean, always spawn a subagent for operations that read multiple emails.
+Email content is large. To keep the main conversation context clean, always spawn a Claude Code subagent for operations that read multiple emails.
 
 **Pattern:**
 ```
-1. Use Task tool with subagent_type: "general-purpose"
-2. Instruct subagent to use Gmail MCP tools
+1. Use Task tool with Claude Code subagent_type: "general-purpose"
+2. Instruct Claude Code subagent to use Gmail MCP tools
 3. Have it return only summarized results
 4. Present results to user
 ```
@@ -99,18 +99,19 @@ Email content is large. To keep the main conversation context clean, always spaw
 ## Quick Commands
 
 ### Check Inbox
-Spawn a subagent to fetch and summarize unread emails:
+Spawn a Claude Code Claude Code subagent to fetch and summarize unread emails:
 ```
-Task prompt: "Use Gmail MCP tools to fetch unread emails (max 20).
+Task prompt: "Use Gmail MCP tools to fetch unread emails (max 200).
 Return a summary list with: sender, subject, one-line preview.
 Do NOT include full email bodies."
 ```
 
 ### Triage Inbox
 See [TRIAGE.md](TRIAGE.md) for full workflow. High-level:
-1. Check if prioritization criteria exist (`get_prioritization_criteria`)
+1. Check if the user has specified a timeframe to filter emails by, if not, ask them before entering trirage, e.g. "last day, last week, last 3 days"
+2. Check if prioritization criteria exist (`get_prioritization_criteria`)
 2. If not, interview user to gather criteria
-3. Spawn subagent to fetch and score emails
+3. Spawn Claude Code subagent to fetch and score emails
 4. Present prioritized list (HIGH/MEDIUM/LOW)
 
 ### Create Automation Rule
@@ -169,7 +170,7 @@ Use with `search_emails`:
 
 To summarize a specific email or batch of emails:
 
-1. Spawn subagent with prompt:
+1. Spawn Claude Code subagent with prompt:
 ```
 Use Gmail MCP tools to get_email(email_id) [or get_emails for batch].
 Read the full content and provide for each email:
@@ -185,7 +186,7 @@ Do NOT include the full email body in your response.
 
 To identify which emails need the user's reply:
 
-1. Spawn subagent with prompt:
+1. Spawn Claude Code subagent with prompt:
 ```
 Use Gmail MCP tools to fetch recent emails. For each email, determine if it needs a reply.
 
