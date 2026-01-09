@@ -62,11 +62,7 @@ Email types that are LOW priority.
 ### custom_rules
 Free-form rules in plain English for special cases.
 
-**Examples:**
-- "Emails about Project Apollo are always high priority"
-- "Anything from recruiters is low priority"
-- "GitHub notifications are medium priority"
-- "Emails with 'invoice' in subject are high priority"
+- Calendar acceptance/reject emails from @wandb.com or @coreweave.com emails are NOT high priority.
 
 ## Scoring Logic
 
