@@ -7,6 +7,13 @@ description: Manage email inbox including triage, prioritization, summaries, and
 
 This skill enables intelligent email management through the Gmail MCP server.
 
+## Architecture
+
+- **MCP Server**: Provides raw Gmail operations (fetch, archive, label, etc.)
+- **This Skill**: Handles orchestration, prioritization logic, and state management
+
+State (prioritization criteria, rules) is stored as JSON files in this skill directory.
+
 ## Prerequisites: Gmail MCP Server
 
 This skill requires the Gmail MCP server to be installed and configured.
@@ -96,10 +103,48 @@ Email content is large. To keep the main conversation context clean, always spaw
 4. Present results to user
 ```
 
+## State Management
+
+This skill stores state as JSON files in `~/.claude/skills/gmail/`:
+
+- `prioritization.json` - User's email prioritization criteria
+- `rules.json` - Automation rules
+
+### Reading State
+```python
+import json
+from pathlib import Path
+
+skill_dir = Path.home() / ".claude/skills/gmail"
+
+def load_prioritization():
+    path = skill_dir / "prioritization.json"
+    if path.exists():
+        return json.loads(path.read_text())
+    return None
+
+def load_rules():
+    path = skill_dir / "rules.json"
+    if path.exists():
+        return json.loads(path.read_text())
+    return []
+```
+
+### Writing State
+```python
+def save_prioritization(criteria: dict):
+    path = skill_dir / "prioritization.json"
+    path.write_text(json.dumps(criteria, indent=2))
+
+def save_rules(rules: list):
+    path = skill_dir / "rules.json"
+    path.write_text(json.dumps(rules, indent=2))
+```
+
 ## Quick Commands
 
 ### Check Inbox
-Spawn a Claude Code Claude Code subagent to fetch and summarize unread emails:
+Spawn a Claude Code subagent to fetch and summarize unread emails:
 ```
 Task prompt: "Use Gmail MCP tools to fetch unread emails (max 200).
 Return a summary list with: sender, subject, one-line preview.
@@ -108,25 +153,24 @@ Do NOT include full email bodies."
 
 ### Triage Inbox
 See [TRIAGE.md](TRIAGE.md) for full workflow. High-level:
-1. Check if the user has specified a timeframe to filter emails by, if not, ask them before entering trirage, e.g. "last day, last week, last 3 days"
-2. Check if prioritization criteria exist (`get_prioritization_criteria`)
-2. If not, interview user to gather criteria
-3. Spawn Claude Code subagent to fetch and score emails
-4. Present prioritized list (HIGH/MEDIUM/LOW)
+1. Check if the user has specified a timeframe to filter emails by, if not, ask them before entering triage
+2. Load prioritization criteria from `~/.claude/skills/gmail/prioritization.json`
+3. If not found, interview user to gather criteria and save
+4. Spawn Claude Code subagent to fetch emails and score them using the criteria
+5. Present prioritized list (HIGH/MEDIUM/LOW)
 
 ### Create Automation Rule
 See [AUTOMATION.md](AUTOMATION.md). High-level:
 1. Ask user for rule in natural language
 2. Parse into structured conditions/actions
-3. Save via `create_rule`
+3. Save to `~/.claude/skills/gmail/rules.json`
 4. Offer dry-run to preview
 
 ### Run Automation
-Execute saved rules:
-```
-run_automation(dry_run=true)  # Preview first
-run_automation()              # Execute
-```
+Execute saved rules by:
+1. Loading rules from `~/.claude/skills/gmail/rules.json`
+2. Fetching emails that match conditions
+3. Executing actions via MCP tools (archive, label, etc.)
 
 ## Available MCP Tools
 
@@ -142,17 +186,9 @@ run_automation()              # Execute
 - `batch_label` - Modify labels on multiple emails
 - `list_labels` - List all Gmail labels
 
-### Triage
-- `setup_prioritization` - Save user's priority criteria
-- `get_prioritization_criteria` - Get saved criteria
-- `clear_prioritization` - Reset criteria
-- `triage_inbox` - Score emails (requires criteria set)
-
-### Automation
-- `create_rule` - Create automation rule
-- `list_rules` - List all rules
-- `delete_rule` - Delete a rule
-- `run_automation` - Execute rules (supports dry_run)
+### Auth
+- `authenticate` - Trigger OAuth flow
+- `check_auth` - Check authentication status
 
 ## Gmail Query Syntax
 
